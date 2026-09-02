@@ -567,6 +567,35 @@ test "paragraph" {
     try expectEqualStrings(html, parsed);
 }
 
+test "paragraph with single newline" {
+    const html =
+        \\<!DOCTYPE html>
+        \\<html>
+        \\<head>
+        \\  <meta charset="utf8">
+        \\</head>
+        \\<body>
+        \\<main>
+        \\<h1>a title</h1>
+        \\<p>a paragraph</p>
+        \\</main>
+        \\</body>
+        \\</html>
+        \\
+    ;
+
+    const md =
+        \\# a title
+        \\
+        \\a
+        \\paragraph
+    ;
+
+    const parsed = try zmd.parseAlloc(allocator, md, .{});
+    defer allocator.free(parsed);
+    try expectEqualStrings(html, parsed);
+}
+
 test "unordered list (+)" {
     const html =
         \\<!DOCTYPE html>

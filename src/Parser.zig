@@ -5,6 +5,7 @@ writer: *Writer,
 config: Config,
 levels: [max_list_depth]Level = undefined,
 depth: usize = 0,
+paragraph_close: ?[]const u8 = null,
 
 pub fn run(self: *Parser) !void {
     const root_close = try self.config.root(self.writer, .{});
@@ -15,6 +16,7 @@ pub fn run(self: *Parser) !void {
 
         if (body.len == 0) {
             try self.closeAllLists();
+            try self.closeParagraph();
             continue;
         }
 
@@ -36,10 +38,11 @@ pub fn run(self: *Parser) !void {
         }
 
         try self.closeAllLists();
-        try self.render(.paragraph, line);
+        try self.renderParagraph(line);
     }
 
     try self.closeAllLists();
+    try self.closeParagraph();
     if (root_close.len > 0) try self.writer.writeAll(root_close);
     try self.writer.flush();
 }
@@ -67,6 +70,21 @@ fn render(
     const close = try formatter(self.writer, .{});
     try self.renderInline(content);
     if (close.len > 0) try self.writer.writeAll(close);
+}
+
+fn renderParagraph(
+    self: *Parser,
+    content: []const u8,
+) !void {
+    if (self.paragraph_close == null) {
+        const formatter: Config.Fn = @field(self.config, @tagName(ElementType.paragraph));
+        const close = try formatter(self.writer, .{});
+        try self.renderInline(content);
+        self.paragraph_close = close;
+    } else {
+        try self.renderInline(" ");
+        try self.renderInline(content);
+    }
 }
 
 fn renderHeading(self: *Parser, level: usize, content: []const u8) !void {
@@ -172,6 +190,13 @@ fn closeAllLists(self: *Parser) !void {
     while (self.depth > 0) {
         try self.closeTopItem();
         try self.closeTopList();
+    }
+}
+
+fn closeParagraph(self: *Parser) !void {
+    if (self.paragraph_close != null) {
+        try self.writer.writeAll(self.paragraph_close.?);
+        self.paragraph_close = null;
     }
 }
 
