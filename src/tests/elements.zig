@@ -567,7 +567,7 @@ test "paragraph" {
     try expectEqualStrings(html, parsed);
 }
 
-test "paragraph with single newline" {
+test "paragraph splits on a double newline" {
     const html =
         \\<!DOCTYPE html>
         \\<html>
@@ -578,6 +578,7 @@ test "paragraph with single newline" {
         \\<main>
         \\<h1>a title</h1>
         \\<p>a paragraph</p>
+        \\<p>a different paragraph</p>
         \\</main>
         \\</body>
         \\</html>
@@ -589,6 +590,8 @@ test "paragraph with single newline" {
         \\
         \\a
         \\paragraph
+        \\
+        \\a different paragraph
     ;
 
     const parsed = try zmd.parseAlloc(allocator, md, .{});
